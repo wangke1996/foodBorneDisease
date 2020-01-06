@@ -1,0 +1,27 @@
+#components-layout-demo-top .logo {
+    width: 120px;
+    height: 31px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 16px 24px 16px 0;
+    float: left;
+}
+
+#sc-launcher {
+    position: relative;
+}
+
+#sc-launcher .sc-chat-window {
+    position: static;
+}
+
+#sc-launcher .sc-launcher {
+    position: absolute;
+    bottom: -80px;
+    left: 0;
+}
+
+#sc-launcher .sc-launcher img {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
