@@ -34,6 +34,13 @@ function getData(url, callback, data = {}) {
 
 export function getAnswer(messageList, callback) {
     // getData('getAnswer', callback, JSON.stringify(messageList));
-    console.log(messageList);
     postData('getAnswer', messageList, callback);
+}
+
+export function getBugs(callback) {
+    getData('getBugs', d => callback([d]));
+}
+
+export function getBugDetail(bugKey, callback) {
+    getData('getBugDetail', callback, {bugKey});
 }

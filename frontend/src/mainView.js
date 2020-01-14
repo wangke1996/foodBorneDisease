@@ -3,6 +3,7 @@ import {Layout, Menu, Breadcrumb, Row, Col} from 'antd';
 import {Launcher} from 'react-chat-window'
 import {getAnswer} from "./api";
 import './mainView.css';
+import {BugMenu} from "./bugDetail";
 
 const {Header, Content, Footer} = Layout;
 
@@ -75,9 +76,8 @@ export class MainView extends Component {
                         defaultSelectedKeys={['2']}
                         style={{lineHeight: '64px'}}
                     >
-                        <Menu.Item key="1">nav 1</Menu.Item>
-                        <Menu.Item key="2">nav 2</Menu.Item>
-                        <Menu.Item key="3">nav 3</Menu.Item>
+                        <Menu.Item key="1">致病微生物</Menu.Item>
+                        <Menu.Item key="2">智能问诊</Menu.Item>
                     </Menu>
                 </Header>
                 <Content style={{padding: '0 50px'}}>
@@ -87,7 +87,8 @@ export class MainView extends Component {
                         <Breadcrumb.Item>App</Breadcrumb.Item>
                     </Breadcrumb>
                     <div style={{background: '#fff', padding: 24, minHeight: 500}}>
-                        <Row type="flex" justify="space-around">
+                        <Row type="flex" justify="start">
+                            <Col span={16}><BugMenu/></Col>
                             <Col span={4}><ChatWindow/></Col>
                         </Row>
 

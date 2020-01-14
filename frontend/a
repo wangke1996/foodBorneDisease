@@ -1,0 +1,116 @@
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0           
+INPUT_direct  all  --  0.0.0.0/0            0.0.0.0/0           
+INPUT_ZONES_SOURCE  all  --  0.0.0.0/0            0.0.0.0/0           
+INPUT_ZONES  all  --  0.0.0.0/0            0.0.0.0/0           
+DROP       all  --  0.0.0.0/0            0.0.0.0/0            ctstate INVALID
+REJECT     all  --  0.0.0.0/0            0.0.0.0/0            reject-with icmp-host-prohibited
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:3000
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            ctstate RELATED,ESTABLISHED
+ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0           
+FORWARD_direct  all  --  0.0.0.0/0            0.0.0.0/0           
+FORWARD_IN_ZONES_SOURCE  all  --  0.0.0.0/0            0.0.0.0/0           
+FORWARD_IN_ZONES  all  --  0.0.0.0/0            0.0.0.0/0           
+FORWARD_OUT_ZONES_SOURCE  all  --  0.0.0.0/0            0.0.0.0/0           
+FORWARD_OUT_ZONES  all  --  0.0.0.0/0            0.0.0.0/0           
+DROP       all  --  0.0.0.0/0            0.0.0.0/0            ctstate INVALID
+REJECT     all  --  0.0.0.0/0            0.0.0.0/0            reject-with icmp-host-prohibited
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+OUTPUT_direct  all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain FORWARD_IN_ZONES (1 references)
+target     prot opt source               destination         
+FWDI_public  all  --  0.0.0.0/0            0.0.0.0/0           [goto] 
+
+Chain FORWARD_IN_ZONES_SOURCE (1 references)
+target     prot opt source               destination         
+
+Chain FORWARD_OUT_ZONES (1 references)
+target     prot opt source               destination         
+FWDO_public  all  --  0.0.0.0/0            0.0.0.0/0           [goto] 
+
+Chain FORWARD_OUT_ZONES_SOURCE (1 references)
+target     prot opt source               destination         
+
+Chain FORWARD_direct (1 references)
+target     prot opt source               destination         
+
+Chain FWDI_public (1 references)
+target     prot opt source               destination         
+FWDI_public_log  all  --  0.0.0.0/0            0.0.0.0/0           
+FWDI_public_deny  all  --  0.0.0.0/0            0.0.0.0/0           
+FWDI_public_allow  all  --  0.0.0.0/0            0.0.0.0/0           
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0           
+
+Chain FWDI_public_allow (1 references)
+target     prot opt source               destination         
+
+Chain FWDI_public_deny (1 references)
+target     prot opt source               destination         
+
+Chain FWDI_public_log (1 references)
+target     prot opt source               destination         
+
+Chain FWDO_public (1 references)
+target     prot opt source               destination         
+FWDO_public_log  all  --  0.0.0.0/0            0.0.0.0/0           
+FWDO_public_deny  all  --  0.0.0.0/0            0.0.0.0/0           
+FWDO_public_allow  all  --  0.0.0.0/0            0.0.0.0/0           
+
+Chain FWDO_public_allow (1 references)
+target     prot opt source               destination         
+
+Chain FWDO_public_deny (1 references)
+target     prot opt source               destination         
+
+Chain FWDO_public_log (1 references)
+target     prot opt source               destination         
+
+Chain INPUT_ZONES (1 references)
+target     prot opt source               destination         
+IN_public  all  --  0.0.0.0/0            0.0.0.0/0           [goto] 
+
+Chain INPUT_ZONES_SOURCE (1 references)
+target     prot opt source               destination         
+
+Chain INPUT_direct (1 references)
+target     prot opt source               destination         
+
+Chain IN_public (1 references)
+target     prot opt source               destination         
+IN_public_log  all  --  0.0.0.0/0            0.0.0.0/0           
+IN_public_deny  all  --  0.0.0.0/0            0.0.0.0/0           
+IN_public_allow  all  --  0.0.0.0/0            0.0.0.0/0           
+ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0           
+
+Chain IN_public_allow (1 references)
+target     prot opt source               destination         
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:22 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:9290 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:9300 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:8080 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:9200 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:3306 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:7474 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:7077 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:7687 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:22 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:6379 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:3001 ctstate NEW
+ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0            tcp dpt:5005 ctstate NEW
+
+Chain IN_public_deny (1 references)
+target     prot opt source               destination         
+
+Chain IN_public_log (1 references)
+target     prot opt source               destination         
+
+Chain OUTPUT_direct (1 references)
+target     prot opt source               destination         
