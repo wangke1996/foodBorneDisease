@@ -1,6 +1,5 @@
 import reqwest from "reqwest";
-
-const serverURL = 'http://192.168.3.140:6006/';
+import {serverURL} from "./config";
 
 function wrapUrl(url, randParam = true) {
     let trueURL = serverURL + url;
