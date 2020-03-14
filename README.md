@@ -23,6 +23,7 @@ This is a guide for developers.
     python build_buggraph.py
     ```
 
+- Download [Pre-trained BERT Model](https://storage.googleapis.com/bert_models/2018_11_03/chinese_L-12_H-768_A-12.zip)
 - Start the BERT service
 
     ```
