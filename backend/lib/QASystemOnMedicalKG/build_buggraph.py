@@ -87,7 +87,7 @@ class MedicalGraph:
         for edge in edges:
             set_edges.append('###'.join(edge))
         all = len(set(set_edges))
-        for edge in set(set_edges):
+        for edge in tqdm(set(set_edges),desc = rel_type):
             edge = edge.split('###')
             p = edge[0]
             q = edge[1]
@@ -96,7 +96,6 @@ class MedicalGraph:
             try:
                 self.g.run(query)
                 count += 1
-                print(rel_type, count, all)
             except Exception as e:
                 print(e)
         return
@@ -153,4 +152,4 @@ if __name__ == '__main__':
     # print(len(handler.Bugs))
     # handler.create_graphnodes()
     # handler.create_graphrels()
-    handler.export_data()
+    # handler.export_data()
