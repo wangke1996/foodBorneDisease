@@ -10,6 +10,8 @@ frontend/node_modules
 frontend/package-lock.json
 frontend/package.json
 
+frontent/src/config.js
+
 # testing
 frontend/coverage
 frontend/src/testData/
