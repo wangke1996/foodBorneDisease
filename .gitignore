@@ -1,2 +1,32 @@
 ltp_data_v3.4.0/
 chinese_L-12_H-768_A-12/
+.idea/
+*.pyc
+backend/static/
+backend/templates/
+
+# dependencies
+frontend/node_modules
+frontend/package-lock.json
+frontend/package.json
+
+frontent/src/config.js
+
+# testing
+frontend/coverage
+frontend/src/testData/
+# production
+frontend/build
+# misc
+frontend/.DS_Store
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontent/.idea
+
+log.txt
