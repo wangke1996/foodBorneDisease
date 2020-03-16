@@ -1,5 +1,6 @@
 ltp_data_v3.4.0/
 chinese_L-12_H-768_A-12/
+Tencent_AILab_ChineseEmbedding/
 .idea/
 *.pyc
 backend/static/
@@ -30,3 +31,4 @@ frontend/yarn-error.log*
 frontent/.idea
 
 log.txt
+
