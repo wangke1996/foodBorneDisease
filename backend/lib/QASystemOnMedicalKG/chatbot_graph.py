@@ -37,6 +37,7 @@ class ChatBotGraph:
             return answer
 
         elif self.dialog_state == "SynonymQuestioning":
+            self.dialog_state == "Answering"
             if sent == "是":
                 return self.get_answer(self.last_question)
             else:
