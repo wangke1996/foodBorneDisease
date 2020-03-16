@@ -1,5 +1,6 @@
 import reqwest from "reqwest";
-import {serverURL} from "./config";
+
+const serverURL = 'http://192.168.3.140:6006/';
 
 function wrapUrl(url, randParam = true) {
     let trueURL = serverURL + url;
@@ -15,10 +16,8 @@ function postData(url, data, callback) {
         type: 'json',
         contentType: 'application/json',
         data: JSON.stringify(data),
-        success: callback,
-        error: callback,
-        // success: (d) => callback(d.response),
-        // error: (d) => callback(d.response),
+        success: (d) => callback(d.response),
+        error: (d) => callback(d.response),
     })
 }
 
@@ -36,10 +35,6 @@ function getData(url, callback, data = {}) {
 export function getAnswer(messageList, callback) {
     // getData('getAnswer', callback, JSON.stringify(messageList));
     postData('getAnswer', messageList, callback);
-}
-
-export function getAnswerAndGraph(messageList, callback) {
-    postData('getAnswerAndGraph', messageList, callback);
 }
 
 export function getBugs(callback) {

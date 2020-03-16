@@ -1,10 +1,68 @@
 import React, {Component} from 'react';
 import {Layout, Menu, Breadcrumb, Row, Col} from 'antd';
+import {Launcher} from 'react-chat-window'
+import {getAnswer} from "./api";
 import './mainView.css';
 import {BugMenu} from "./bugDetail";
-import {ChatRobot} from "./chatRobot";
 
 const {Header, Content, Footer} = Layout;
+
+const robotAvatar = process.env.PUBLIC_URL + '/img/robot.svg';
+
+class ChatWindow extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            messageList: [],
+            isOpen: true
+        };
+    }
+
+    _onMessageWasSent = (message) => {
+        this.setState({
+            messageList: [...this.state.messageList, message]
+        }, () => {
+            getAnswer(this.state.messageList, (answer) => {
+                console.log(answer);
+                this._sendMessage(answer);
+            });
+        });
+    };
+    _sendMessage = (text) => {
+        if (text.length > 0) {
+            this.setState({
+                messageList: [...this.state.messageList, {
+                    author: 'them',
+                    type: 'text',
+                    data: {text}
+                }]
+            })
+        }
+    };
+    handleClick = () => {
+        if (this.state.isOpen)
+            this.setState({messageList: [], isOpen: false});
+        else
+            this.setState({isOpen: true})
+    };
+
+    render() {
+        const {messageList, isOpen} = this.state;
+        return (<div>
+            <Launcher
+                agentProfile={{
+                    teamName: '智能问诊机器人',
+                    imageUrl: robotAvatar
+                }}
+                onMessageWasSent={this._onMessageWasSent}
+                messageList={messageList}
+                isOpen={isOpen}
+                handleClick={this.handleClick}
+                showEmoji={false}
+            />
+        </div>)
+    }
+}
 
 export class MainView extends Component {
     render() {
@@ -30,8 +88,8 @@ export class MainView extends Component {
                     </Breadcrumb>
                     <div style={{background: '#fff', padding: 24, minHeight: 500}}>
                         <Row type="flex" justify="start">
-                            <Col span={8}><BugMenu/></Col>
-                            <Col span={16}><ChatRobot/></Col>
+                            <Col span={16}><BugMenu/></Col>
+                            <Col span={4}><ChatWindow/></Col>
                         </Row>
 
                     </div>

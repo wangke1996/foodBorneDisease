@@ -2,23 +2,19 @@ import os
 import ahocorasick
 import json
 import numpy as np
-from pyhanlp import *
 # 设置默认文件编码utf8
 import _locale
 from bert_serving.client import BertClient
+from pyltp import Segmentor
+
+LTP_DATA_DIR = 'ltp_data_v3.4.0'
+cws_model_path = os.path.join(LTP_DATA_DIR, 'cws.model')
+segmentor = Segmentor()
+segmentor.load(cws_model_path)
+
 bc = BertClient()
 
 _locale._getdefaultlocale = (lambda *args: ['en_US', 'utf8'])
-
-CustomDictionary = JClass("com.hankcs.hanlp.dictionary.CustomDictionary")
-CoreStopWordDictionary = JClass(
-    "com.hankcs.hanlp.dictionary.stopword.CoreStopWordDictionary")
-segment = JClass("com.hankcs.hanlp.seg.Segment")
-segment = HanLP.newSegment('nshort')
-segment.enablePartOfSpeechTagging(True)
-segment.enableAllNamedEntityRecognize(True)
-segment.enableCustomDictionary(True)
-segment.enableCustomDictionaryForcing(True)
 
 
 class QuestionClassifier:
@@ -81,10 +77,10 @@ class QuestionClassifier:
 
     def classify(self, question):
         data = {}
-        entity_list = self.get_entity(question)
+        entity_list = self.entity_extract_match(question)
         dialog_state = "Answering"
         if not entity_list:
-            prob_entity, original_word = self.get_entity_synonym(question)
+            prob_entity, original_word = self.entity_extract_bert(question)
             dialog_state = "SynonymQuestioning"
             return dialog_state, question.replace(original_word, prob_entity)
         data['args'] = entity_list
@@ -101,7 +97,7 @@ class QuestionClassifier:
             question_type = 'disease_symptom'
             question_types.append(question_type)
 
-        if self.check_words(self.symptom_qwds, question) and ('symptom' in types):
+        if ('symptom' in types):
             question_type = 'symptom_disease'
             question_types.append(question_type)
 
@@ -114,10 +110,10 @@ class QuestionClassifier:
         if self.check_words(self.easyget_qwds, question) and 'disease' in types:
             question_type = 'disease_easyget'
             question_types.append(question_type)
-      
+
         data['question_types'] = question_types
 
-        return dialog_state,data
+        return dialog_state, data
 
     '''构造词对应的类型'''
 
@@ -144,25 +140,26 @@ class QuestionClassifier:
 
     '''问句过滤'''
 
-    def get_entity_synonym(self, question):
-        term = segment.seg(question)
-        CoreStopWordDictionary.apply(term)
-        print(term)
-        max_score = 0
-        for word in term:
-            print(word.nature)
-            wd_vec = bc.encode([word.word])[0]
-            for wd, vec in self.region_vecs.items():
-                score = np.inner(wd_vec, vec) / \
-                    (np.linalg.norm(wd_vec)*np.linalg.norm(vec))
+    def entity_extract_bert(self, question):
+        n_grams = [2,3,4]
+        for n in n_grams:
+            term = []
+            max_score = 0
+            for i in range(len(question)):
+                term.append(question[i:i+n])
+            for word in term:
+                wd_vec = bc.encode([word])[0]
+                for wd, vec in self.symptom_vec.items():
+                    score = np.inner(wd_vec, vec) / \
+                        (np.linalg.norm(wd_vec)*np.linalg.norm(vec))
 
                 if score > max_score:
                     max_score = score
                     prob_entity = wd
-                    original_word = word.word
+                    original_word = word
         return prob_entity, original_word
 
-    def get_entity(self, question):
+    def entity_extract_match(self, question):
         region_wds = []
         for i in self.region_tree.iter(question):
             wd = i[1][1]
