@@ -78,40 +78,36 @@ class QuestionClassifier:
     def classify(self, question):
         data = {}
         entity_list = self.entity_extract_match(question)
-        dialog_state = "Answering"
+        dialog_state = "Waiting"
         if not entity_list:
             prob_entity, original_word = self.entity_extract_bert(question)
             dialog_state = "SynonymQuestioning"
             return dialog_state, question.replace(original_word, prob_entity)
-        data['args'] = entity_list
+        data['entities'] = entity_list
         # 收集问句当中所涉及到的实体类型
         types = []
         for type_ in entity_list.values():
             types += type_
-        question_type = 'others'
 
-        question_types = []
-
+        question_type=''
+        # todo :仅支持单一描述
         # 症状
         if self.check_words(self.symptom_qwds, question) and ('disease' in types):
             question_type = 'disease_symptom'
-            question_types.append(question_type)
 
         if ('symptom' in types):
             question_type = 'symptom_disease'
-            question_types.append(question_type)
+
 
         # 来源
         if self.check_words(self.cause_qwds, question) and ('disease' in types):
             question_type = 'result_from'
-            question_types.append(question_type)
 
         # 疾病易感染人群
         if self.check_words(self.easyget_qwds, question) and 'disease' in types:
             question_type = 'disease_easyget'
-            question_types.append(question_type)
 
-        data['question_types'] = question_types
+        data['question_types'] = question_type
 
         return dialog_state, data
 
@@ -152,11 +148,11 @@ class QuestionClassifier:
                 for wd, vec in self.symptom_vec.items():
                     score = np.inner(wd_vec, vec) / \
                         (np.linalg.norm(wd_vec)*np.linalg.norm(vec))
+                    if score > max_score:
 
-                if score > max_score:
-                    max_score = score
-                    prob_entity = wd
-                    original_word = word
+                        max_score = score
+                        prob_entity = wd
+                        original_word = word
         return prob_entity, original_word
 
     def entity_extract_match(self, question):

@@ -1,4 +1,4 @@
-# from .QASystemOnMedicalKG.chatbot_graph import ChatBotGraph
+from .QASystemOnMedicalKG.chatbot_graph import RobotRespond
 
 response_with_graph_example = [
     # 假设首句抽取的症状是“肌肉疼痛”，下一级决策中，需要知道吃过猪肉（可能是弓形虫、旋毛虫）还是海鲜（空肠弯曲菌），
@@ -64,6 +64,7 @@ response_with_graph_example = [
             ]
         }
     }
+    
 ]
 
 responses = (x for x in response_with_graph_example * 100)  # repeat for test
@@ -71,18 +72,20 @@ responses = (x for x in response_with_graph_example * 100)  # repeat for test
 
 class ChatRobot(object):
     def __init__(self):
-        # self.handler = ChatBotGraph()
+        self.handler = RobotRespond()
         pass
 
     def make_response(self, message_list):
-        # answer = self.handler.chat_main(message_list[-1]['data']['text'])
+        # answer = self.handler.system_main(message_list[-1]['data']['text'])
         answer = "answer for: %s" % message_list[-1]['data']['text']
         return answer
 
     def make_response_with_graph(self, message_list):
         global responses
-        response = responses.__next__()
-        return response
+        #response = responses.__next__()
+        response  = self.handler.system_main(message_list[-1]['data']['text'])
+        print(response)
+        return response 
 
 
 ROBOT = ChatRobot()

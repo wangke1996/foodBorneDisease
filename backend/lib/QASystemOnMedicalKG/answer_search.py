@@ -8,41 +8,31 @@ from py2neo import Graph
 class AnswerSearcher:
     def __init__(self):
         self.g = Graph("http://localhost:7474",auth=("neo4j","ohahaha"))
-        self.num_limit = 5
+        self.num_limit = 3
 
     '''执行cypher查询，并返回相应结果'''
-    def search_main(self, sqls): 
+    def search_main(self, sql_): 
         final_answers = []
-        dialog_state = "Answering"
+        dialog_state = "Waiting"
         desc = []
-        # for sql_ in sqls:
-        #     question_type = sql_['question_type']
-        #     queries = sql_['sql']
-        #     answers = []
-        #     for query in queries:
-        #         ress = self.g.run(query).data()
-        #         answers += ress
-        #     print(answers)
-        #     final_answer = self.answer_prettify(question_type, answers)
-        #     if final_answer:
-        #         final_answers.append(final_answer)
 
-        if sqls:
-            sql_ = sqls[0]
-            question_type = sql_['question_type']
-            queries = sql_['sql']
-            answers = []
-            query = queries[0]
-            ress = self.g.run(query).data()
-            answers += ress
-            if len(answers)>1 and question_type == 'symptom_disease':
-                dialog_state = "Questioning"
-            if not answers:
-                final_answers = []
-            else:
-                final_answer ,desc = self.answer_prettify(question_type, answers)
-                if final_answer:
-                    final_answers.append(final_answer)
+        question_type = sql_['question_type']
+        queries = sql_['sql']
+        answers = []
+        query = queries[0]
+        ress = self.g.run(query).data()
+        answers += ress
+
+        if len(answers)>1 and question_type == 'symptom_disease':
+            dialog_state = "Questioning"
+
+        if not answers:
+            final_answers = []
+
+        else:
+            final_answer ,desc = self.answer_prettify(question_type, answers)
+            if final_answer:
+                final_answers.append(final_answer)
 
         return dialog_state,final_answers,desc
 
@@ -55,25 +45,25 @@ class AnswerSearcher:
         if not answers:
             return ''
         if question_type == 'disease_symptom':
-            desc = [i['n.name'] for i in answers]
+            desc = {'symptom':[i['n.name'] for i in answers]}
             subject = answers[0]['m.name']
-            final_answer = '{0}的症状包括：{1}'.format(subject, '；'.join(list(set(desc))[:self.num_limit]))
+            final_answer = '{0}的症状包括：{1}'.format(subject, '、'.join([i['n.name'] for i in answers][:self.num_limit]))
 
         elif question_type == 'symptom_disease':
-            desc = [i['m.name'] for i in answers][:self.num_limit]
+            desc = {'disease':[i['m.name'] for i in answers][:self.num_limit]}
             subject = answers[0]['n.name']
-            final_answer = '症状{0}可能染上的疾病有：{1}'.format(subject, '；'.join(list(set(desc))[:self.num_limit]))
+            final_answer = '症状{0}可能的原因是有：{1}'.format(subject, '、'.join([i['m.name'] for i in answers][:self.num_limit]))
                 
         elif question_type == 'result_from':
-            desc = [i['n.name'] for i in answers]
+            desc = {'food':[i['n.name'] for i in answers]}
             subject = answers[0]['m.name']
-            final_answer = '可能引起{0}的食物有：{1}'.format(subject, '；'.join(list(set(desc))[:self.num_limit]))
+            final_answer = '可能引起{0}的食物有：{1}'.format(subject, '、'.join([i['n.name'] for i in answers][:self.num_limit]))
         
         elif question_type == 'disease_easyget':
-            desc = [i['n.name'] for i in answers]
+            desc = {'people':[i['n.name'] for i in answers]}
             subject = answers[0]['m.name']
 
-            final_answer = '{0}的易感人群包括：{1}'.format(subject, '；'.join(list(set(desc))[:self.num_limit]))
+            final_answer = '{0}的易感人群包括：{1}'.format(subject, '、'.join(list(set(list(desc.values())[[0]]))[:self.num_limit]))
 
         # elif question_type == 'disease_prevent':
         #     desc = [i['m.prevent'] for i in answers]

@@ -15,13 +15,13 @@ _locale._getdefaultlocale = (lambda *args: ['en_US', 'utf8'])
 
 
 '''问答类'''
-class ChatBotGraph:
+class RobotRespond:
     def __init__(self):
         self.classifier = QuestionClassifier()
         self.parser = QuestionPaser()
         self.searcher = AnswerSearcher()
 
-    def chat_main(self, sent):
+    def system_main(self, sent):
         answer = '没答上来'
         res_classify = self.classifier.classify(sent)
         if not res_classify:
@@ -35,9 +35,9 @@ class ChatBotGraph:
             return '\n'.join(final_answers)
 
 if __name__ == '__main__':
-    handler = ChatBotGraph()
+    handler = RobotRespond()
     while 1:
         question = input('用户:')
-        answer = handler.chat_main(question)
+        answer = handler.system_main(question)
         print('小勇:', answer)
 

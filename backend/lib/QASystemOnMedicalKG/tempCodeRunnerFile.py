@@ -1,1 +1,1 @@
-read_nodes()
+bert-serving-start -model_dir F:\learn\ngnlab\KG\chinese_L-12_H-768_A-12\chinese_L-12_H-768_A-12
