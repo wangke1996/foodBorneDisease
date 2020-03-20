@@ -7,20 +7,20 @@ response_with_graph_example = [
         'answer': '你最近吃过以下哪种食物：1.猪肉  2.蔬菜  3. 其它这一级决策的选项',
         'graph': {
             'nodes': [
-                {'id': '肌肉疼痛', 'group': '症状'},
-                {'id': '猪肉', 'group': '来源'},
-                {'id': '海鲜', 'group': '来源'},
-                {'id': '弓形虫', 'group': '病原'},
-                {'id': '旋毛虫属', 'group': '病原'},
-                {'id': '空肠弯曲菌', 'group': '病原'}
+                {'id': '肌肉疼痛', 'group': '症状', 'new': False},
+                {'id': '猪肉', 'group': '来源', 'new': True},
+                {'id': '海鲜', 'group': '来源', 'new': True},
+                {'id': '弓形虫', 'group': '病原', 'new': True},
+                {'id': '旋毛虫属', 'group': '病原', 'new': True},
+                {'id': '空肠弯曲菌', 'group': '病原', 'new': True},
             ],
             'links': [
-                {'source': '弓形虫', 'target': '肌肉疼痛', 'relation': '导致'},
-                {'source': '旋毛虫属', 'target': '肌肉疼痛', 'relation': '导致'},
-                {'source': '空肠弯曲菌', 'target': '肌肉疼痛', 'relation': '导致'},
-                {'source': '弓形虫', 'target': '猪肉', 'relation': '来源'},
-                {'source': '旋毛虫属', 'target': '猪肉', 'relation': '来源'},
-                {'source': '空肠弯曲菌', 'target': '海鲜', 'relation': '来源'}
+                {'source': '弓形虫', 'target': '肌肉疼痛', 'relation': '导致', 'new': True},
+                {'source': '旋毛虫属', 'target': '肌肉疼痛', 'relation': '导致', 'new': True},
+                {'source': '空肠弯曲菌', 'target': '肌肉疼痛', 'relation': '导致', 'new': True},
+                {'source': '弓形虫', 'target': '猪肉', 'relation': '来源', 'new': True},
+                {'source': '旋毛虫属', 'target': '猪肉', 'relation': '来源', 'new': True},
+                {'source': '空肠弯曲菌', 'target': '海鲜', 'relation': '来源', 'new': True},
             ]
         }
     },
@@ -31,18 +31,18 @@ response_with_graph_example = [
         'answer': '你最近是否出现了头痛的症状：1.是  2.否',
         'graph': {
             'nodes': [
-                {'id': '肌肉疼痛', 'group': '症状'},
-                {'id': '猪肉', 'group': '来源'},
-                {'id': '弓形虫', 'group': '病原'},
-                {'id': '旋毛虫属', 'group': '病原'},
-                {'id': '头痛', 'group': '症状'}
+                {'id': '肌肉疼痛', 'group': '症状', 'new': False},
+                {'id': '猪肉', 'group': '来源', 'new': False},
+                {'id': '弓形虫', 'group': '病原', 'new': False},
+                {'id': '旋毛虫属', 'group': '病原', 'new': False},
+                {'id': '头痛', 'group': '症状', 'new': True},
             ],
             'links': [
-                {'source': '弓形虫', 'target': '肌肉疼痛', 'relation': '导致'},
-                {'source': '旋毛虫属', 'target': '肌肉疼痛', 'relation': '导致'},
-                {'source': '弓形虫', 'target': '猪肉', 'relation': '来源'},
-                {'source': '旋毛虫属', 'target': '猪肉', 'relation': '来源'},
-                {'source': '弓形虫', 'target': '头痛', 'relation': '导致'}
+                {'source': '弓形虫', 'target': '肌肉疼痛', 'relation': '导致', 'new': False},
+                {'source': '旋毛虫属', 'target': '肌肉疼痛', 'relation': '导致', 'new': False},
+                {'source': '弓形虫', 'target': '猪肉', 'relation': '来源', 'new': False},
+                {'source': '旋毛虫属', 'target': '猪肉', 'relation': '来源', 'new': False},
+                {'source': '弓形虫', 'target': '头痛', 'relation': '导致', 'new': True},
             ]
         }
     },
@@ -52,15 +52,15 @@ response_with_graph_example = [
         'result': "弓形虫",  # 确诊后，返回结果中包含病原微生物的名称
         'graph': {
             'nodes': [
-                {'id': '肌肉疼痛', 'group': '症状'},
-                {'id': '猪肉', 'group': '来源'},
-                {'id': '弓形虫', 'group': '病原'},
-                {'id': '头痛', 'group': '症状'}
+                {'id': '肌肉疼痛', 'group': '症状', 'new': False},
+                {'id': '猪肉', 'group': '来源', 'new': False},
+                {'id': '弓形虫', 'group': '病原', 'new': False},
+                {'id': '头痛', 'group': '症状', 'new': False},
             ],
             'links': [
-                {'source': '弓形虫', 'target': '肌肉疼痛', 'relation': '导致'},
-                {'source': '弓形虫', 'target': '猪肉', 'relation': '来源'},
-                {'source': '弓形虫', 'target': '头痛', 'relation': '导致'}
+                {'source': '弓形虫', 'target': '肌肉疼痛', 'relation': '导致', 'new': False},
+                {'source': '弓形虫', 'target': '猪肉', 'relation': '来源', 'new': False},
+                {'source': '弓形虫', 'target': '头痛', 'relation': '导致', 'new': False},
             ]
         }
     }
