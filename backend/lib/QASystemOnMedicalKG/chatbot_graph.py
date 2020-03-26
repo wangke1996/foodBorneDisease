@@ -15,6 +15,7 @@ _locale._getdefaultlocale = (lambda *args: ['en_US', 'utf8'])
 
 dialog_state_table = ["Waiting", "Questioning", "SynonymQuestioning"]
 q_type_father_children = ['disease_symptom', 'result_from', 'disease_easyget']
+q_type_show ={'disease_symptom':"导致",'result_from' :"来源",'has_time':"发病",'symptom_disease':"导致"}
 
 
 class RobotRespond:
@@ -28,6 +29,7 @@ class RobotRespond:
                          'graph': {'nodes': [],  'links': []}}
         self.false_response = {'answer': '我没能理解你的问题'}
         self.origin_q_type = ''
+        self.origin_entity = ''
 
     def system_main(self, sent):
 
@@ -36,6 +38,7 @@ class RobotRespond:
 
         elif self.dialog_state == "Questioning":
             # sent  --> int or list
+
             if str.isdigit(sent):
                 self.dialog_state, del_entity_list, question_info = self.decision_tree.reply(
                     int(sent))
@@ -45,28 +48,10 @@ class RobotRespond:
                     link['new'] = False
                 for node in self.response['graph']['nodes']:
                     node['new'] = False
-                self.response['answer'] = question_info['answer']
-                for nature_entity in question_info['nature_entities']:
-                    self.response['graph']['nodes'].append(
-                        {'id': nature_entity, 'group': question_info['nature_entity_type'], 'new': True})
-                for answer_entity, answer_entity_natures in question_info['links'].items():
-                    for a_e_nature in answer_entity_natures:
-                        self.response['graph']['links'].append(
-                            {'source': answer_entity, 'target': a_e_nature, 'relation': question_info['q_type'], 'new': True})
+                self.add_graph_entity(question_info)
                 # 删除排除节点及链接
 
-                nature_list = [i['target']
-                               for i in self.response['graph']['links']]
-                self.response['graph']['links'] = [
-                    i for i in self.response['graph']['links'] if i['source'] not in del_entity_list]
-
-                linked_nature_list = [i['target']
-                                      for i in self.response['graph']['links']]
-                del_nature_list = list(
-                    set(nature_list)-set(linked_nature_list))
-                print(linked_nature_list, del_entity_list)
-                self.response['graph']['nodes'] = [i for i in self.response['graph']
-                                                   ['nodes'] if i['id'] not in (del_nature_list+del_entity_list)]
+                self.del_graph_entity(del_entity_list)
 
                 if self.dialog_state == "Waiting":
                     temp_response = self.response
@@ -114,15 +99,15 @@ class RobotRespond:
         self.origin_entity_type = list(res_classify['entities'].items())[0][1]
 
         self.response['graph']['nodes'].append(
-            {'id': self.origin_entity, 'group': self.origin_entity_type, 'new'=True})
+            {'id': self.origin_entity, 'group': self.origin_entity_type, 'new': True})
 
         # 查询构造
         res_sql = self.parser.parser_main(res_classify)
         print(res_sql)
         self.dialog_state, final_answers, desc = self.searcher.search_main(
             res_sql)
-
         # 构建response
+
         answer_entity_type, answer_entities = list(desc.items())[0]
         for answer_entity in answer_entities:
             self.response['graph']['nodes'].append(
@@ -130,10 +115,10 @@ class RobotRespond:
 
             if self.origin_q_type in q_type_father_children:
                 self.response['graph']['links'].append(
-                    {'source': self.origin_entity, 'target': answer_entity, 'relation': self.origin_q_type})
+                    {'source': self.origin_entity, 'target': answer_entity, 'relation': q_type_show[self.origin_q_type]})
             else:
                 self.response['graph']['links'].append(
-                    {'source': answer_entity, 'target': self.origin_entity, 'relation': self.origin_q_type})
+                    {'source': answer_entity, 'target': self.origin_entity, 'relation':q_type_show[self.origin_q_type]})
 
         # 未找到答案或答案唯一 退出
         if self.dialog_state == "Waiting":
@@ -149,17 +134,10 @@ class RobotRespond:
 
         #  构造决策树,第一次进入“Questioning” 才会触发
         elif self.dialog_state == "Questioning":
-            self.decision_tree = DecisionTree(desc)
+            self.decision_tree = DecisionTree(desc, self.origin_entity)
             self.decision_tree.build()
             question_info = self.decision_tree.ask()
-            self.response['answer'] = question_info['answer']
-            for nature_entity in question_info['nature_entities']:
-                self.response['graph']['nodes'].append(
-                    {'id': nature_entity, 'group': question_info['nature_entity_type'], 'new'=True})
-            for answer_entity, answer_entity_natures in question_info['links'].items():
-                for a_e_nature in answer_entity_natures:
-                    self.response['graph']['links'].append(
-                        {'source': answer_entity, 'target': a_e_nature, 'relation': question_info['q_type'], 'new'=True})
+            self.add_graph_entity(question_info)
 
             return self.response
 
@@ -173,6 +151,48 @@ class RobotRespond:
                 return '\n'.join(final_answers)
 
             return question
+
+    def check_input_number(self, sent):
+        if str.isdigit(sent.replace(" ", "")):
+            int_list = []
+            str_list = sent.split(" ")
+            for str in str_list:
+                if str.isdigit(str):
+                    int_list.append(int(str))
+            return int_list
+        else:
+            return False
+
+    def add_graph_entity(self, question_info):
+        self.response['answer'] = question_info['answer']
+        for nature_entity in question_info['nature_entities']:
+            self.response['graph']['nodes'].append(
+                {'id': nature_entity, 'group': question_info['nature_entity_type'], 'new': True})
+        for answer_entity, answer_entity_natures in question_info['links'].items():
+            for a_e_nature in answer_entity_natures:
+                self.response['graph']['links'].append(
+                    {'source': answer_entity, 'target': a_e_nature, 'relation': q_type_show[question_info['q_type']], 'new': True})
+
+    def del_graph_entity(self, del_entity_list):
+
+        old_nodes = []
+        for i in self.response['graph']['links']:
+            old_nodes.append(i['target'])
+            old_nodes.append(i['source'])
+
+        self.response['graph']['links'] = [
+            i for i in self.response['graph']['links'] if (i['source'] not in del_entity_list)and (i['target'] not in del_entity_list)]
+
+        new_nodes = []
+        for i in self.response['graph']['links']:
+            new_nodes.append(i['target'])
+            new_nodes.append(i['source'])
+
+        del_nature_list = list(
+            set(old_nodes)-set(new_nodes))
+
+        self.response['graph']['nodes'] = [i for i in self.response['graph']
+                                           ['nodes'] if i['id'] not in (del_nature_list+del_entity_list)]
 
     def system_reset(self):
         self.__init__()

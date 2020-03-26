@@ -8,13 +8,13 @@ from py2neo import Graph
 class AnswerSearcher:
     def __init__(self):
         self.g = Graph("http://localhost:7474",auth=("neo4j","ohahaha"))
-        self.num_limit = 3
+        self.num_limit = 100
 
     '''执行cypher查询，并返回相应结果'''
     def search_main(self, sql_): 
         final_answers = []
         dialog_state = "Waiting"
-        desc = []
+        desc = {}
 
         question_type = sql_['question_type']
         queries = sql_['sql']

@@ -48,6 +48,9 @@ class QuestionPaser:
         # 查询症状会导致哪些疾病
         if question_type == 'symptom_disease':
             sql = ["MATCH (m:Bug)-[r:has_symptom]->(n:Symptom) where n.name = '{0}' return m.name, r.name, n.name".format(i) for i in entities]
+        
+        if question_type == 'disease_symptom':
+            sql = ["MATCH (m:Bug)-[r:has_symptom]->(n:Symptom) where m.name = '{0}' return m.name, r.name, n.name".format(i) for i in entities]
           
 
         if question_type == 'belongs_to':

@@ -1,28 +1,30 @@
 from py2neo import Graph
+import random
 from . import *
 #from question_parser import QuestionPaser
 
-tree_dims = {'result_from':'food', 'has_time':'time', 'disease_symptom':'symptom'}
+tree_dims = {'result_from': 'food',
+             'disease_symptom': 'symptom', 'has_time': 'time', }
+
 
 class DecisionTree:
-    def __init__(self, desc):
+    def __init__(self, desc, root_symptom):
         self.g = Graph("http://localhost:7474", auth=("neo4j", "ohahaha"))
         self.parser = QuestionPaser()
-        self.num_limits = 3
+        self.root_symptom = root_symptom
+        self.num_limit = 8
         self.tree_dict = {}
-        self.desc =list(desc.items())[0][1]
-        self.last_question = {'question_dim': 0, 'candidates': 0}
+        self.desc = list(desc.items())[0][1]
+        self.last_question = {'question_dim': '', 'candidates': []}
 
     def build(self):
 
         # todo: 仅针对 症状-疾病
 
-
-        
         for question_dim in list(tree_dims.keys()):
             self.tree_dict[question_dim] = {i: [] for i in self.desc}
             queries = self.parser.sql_transfer(question_dim, self.desc)
-            for query in queries[:self.num_limits]:
+            for query in queries:
                 result = self.g.run(query).data()
                 for answer in result:
                     self.tree_dict[question_dim][answer['m.name']].append(
@@ -30,26 +32,39 @@ class DecisionTree:
         print(self.tree_dict)
 
     def ask(self):
-
-        if self.tree_dict:
-            question_dim = list(self.tree_dict.keys())[0]
-            ask_dict = self.tree_dict[question_dim]
+        links = {i: [] for i in self.desc}
+        question_dim = list(self.tree_dict.keys())[0]
+        ask_dict = self.tree_dict[question_dim]
+        if not self.last_question['candidates']:
             candidates = []
             for d in self.desc:
                 candidates += ask_dict[d]
             candidates = list(set(candidates))
-            self.last_question['question_dim'] = question_dim
-            self.last_question['candidates'] = candidates
-            print(question_dim)
-            answer = self.ask_wrapper(question_dim)
-            for i, wd in enumerate(candidates):
-                answer += (str(i+1)+'.'+wd)
-            question_info = {'answer': answer, 'nature_entities': candidates, 'nature_entity_type': tree_dims[question_dim],
-                             'q_type': question_dim, 'links': ask_dict}
-            return question_info
-
+            if self.root_symptom in candidates:
+                candidates.remove(self.root_symptom)
         else:
-            return 0
+            candidates = self.last_question['candidates']
+
+        candi_to_ask = candidates[:self.num_limit]
+        candidates = candidates[self.num_limit:] if len(
+            candidates) > self.num_limit else []
+        for d in self.desc:
+            for nature in ask_dict[d]:
+                if nature != self.root_symptom and nature in candi_to_ask:
+                    links[d].append(nature)
+
+        self.last_question['question_dim'] = question_dim
+        self.last_question['candidates'] = candidates
+        self.last_question['candi_to_ask'] = candi_to_ask
+
+        answer = self.ask_wrapper(question_dim)
+        for i, wd in enumerate(candi_to_ask):
+            answer += (str(i+1)+'.'+wd)
+        answer += "{}.其他".format(self.num_limit+1) if candidates else ""
+        question_info = {'answer': answer, 'nature_entities': candi_to_ask, 'nature_entity_type': tree_dims[question_dim],
+                         'q_type': question_dim, 'links': links}
+
+        return question_info
 
     def ask_wrapper(self, q_type):
         answer = "请回复数字\n"
@@ -65,19 +80,26 @@ class DecisionTree:
         return answer
 
     def update(self, result):
-        candi = self.last_question['candidates'][result-1]
-        question_dim = self.last_question['question_dim']
-        q_dict = self.tree_dict[question_dim]
-        del_list = []
-        # 对于当前question_dim 未命中且属性不为空的删除
-        for disease in self.desc:
-            if (q_dict[disease]) and (candi not in q_dict[disease]):
-                del_list.append(disease)
-        for del_disease in del_list:
-            self.desc.remove(del_disease)
-        del self.tree_dict[question_dim]
-        return del_list
-        
+
+        if result == self.num_limit+1:
+            del_list = self.last_question['candi_to_ask']
+            return del_list
+        else:
+
+            candi = self.last_question['candi_to_ask'][result-1]
+            question_dim = self.last_question['question_dim']
+            self.last_question = {'question_dim': '', 'candidates': []}
+            q_dict = self.tree_dict[question_dim]
+            del_list = []
+            # 对于当前question_dim 未命中且属性不为空的删除
+            for disease in self.desc:
+                if (q_dict[disease]) and (candi not in q_dict[disease]):
+                    del_list.append(disease)
+            for del_disease in del_list:
+                self.desc.remove(del_disease)
+            print(self.desc)
+            del self.tree_dict[question_dim]
+            return del_list
 
     def reply(self, result):
         del_list = self.update(result)
@@ -89,15 +111,15 @@ class DecisionTree:
             next_state = "Waiting"
             answer = self.reply_wrapper(self.desc)
             question_info = {'answer': answer, 'nature_entities': [], 'nature_entity_type': '',
-                             'q_type':'' , 'links': {},'result' : self.desc}
-            return next_state, del_list ,question_info
+                             'q_type': '', 'links': {}, 'result': self.desc}
+            return next_state, del_list, question_info
         # 结束条件2 无候选答案
         if len(self.desc) == 0:
             next_state = "Waiting"
             answer = "未能找到答案"
             question_info = {'answer': answer, 'nature_entities': [], 'nature_entity_type': '',
-                             'q_type':'' , 'links': {}}
-            return  next_state, del_list ,question_info
+                             'q_type': '', 'links': {}}
+            return next_state, del_list, question_info
 
         question_info = self.ask()
         # 结束条件3 有候选答案，但无法生成决策树：返回所有可能答案
@@ -107,8 +129,7 @@ class DecisionTree:
             answer = self.reply_wrapper(self.desc)
             question_info['answer'] = answer
             question_info['result'] = self.desc
-        return next_state, del_list , question_info
+        return next_state, del_list, question_info
 
     def reply_wrapper(self, desc: list):
-        
         return "您好，您的情况可能是"+'或'.join(desc)+"感染导致的，请参阅本系统中"+'和'.join(desc)+"相关知识。"

@@ -52,8 +52,8 @@ export class ForceGraph extends Component {
                 nodeThreeObject={node => {
                     const sprite = new SpriteText(node.id);
                     sprite.color = node.new ? addOpacityToHexColor(node.color, 0.7) : node.color;
-                    sprite.textHeight = node.new ? 5 : 7;
-                    sprite.fontWeight = node.new ? 'normal' : 'bold';
+                    sprite.textHeight = node.new ? 7 : 5;
+                    sprite.fontWeight = node.new ? 'bold' : 'normal';
                     return sprite;
                 }}
                 linkAutoColorBy='relation'
@@ -62,11 +62,11 @@ export class ForceGraph extends Component {
                     // extend link with text sprite
                     const sprite = new SpriteText(link.relation);
                     sprite.color = link.new ? addOpacityToHexColor(link.color, 0.7) : link.color;
-                    sprite.textHeight = link.new ? 3 : 5;
+                    sprite.textHeight = link.new ? 5 : 3;
                     sprite.fontWeight = link.new ? 'normal' : 'bold';
                     return sprite;
                 }}
-                linkWidth={link => link.new ? 1 : 3}
+                linkWidth={link => link.new ? 3 : 1}
                 linkOpacity={0.3}
                 linkPositionUpdate={(sprite, {start, end}) => {
                     const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
