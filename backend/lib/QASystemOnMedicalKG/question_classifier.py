@@ -4,15 +4,15 @@ import json
 import numpy as np
 # 设置默认文件编码utf8
 import _locale
-from bert_serving.client import BertClient
-from pyltp import Segmentor
+# from bert_serving.client import BertClient
+# from pyltp import Segmentor
 
-LTP_DATA_DIR = 'ltp_data_v3.4.0'
-cws_model_path = os.path.join(LTP_DATA_DIR, 'cws.model')
-segmentor = Segmentor()
-segmentor.load(cws_model_path)
+# LTP_DATA_DIR = 'ltp_data_v3.4.0'
+# cws_model_path = os.path.join(LTP_DATA_DIR, 'cws.model')
+# segmentor = Segmentor()
+# segmentor.load(cws_model_path)
 
-bc = BertClient()
+# bc = BertClient()
 
 _locale._getdefaultlocale = (lambda *args: ['en_US', 'utf8'])
 
@@ -44,7 +44,7 @@ class QuestionClassifier:
         self.wdtype_dict = self.build_wdtype_dict()
         # 问句疑问词
         self.symptom_qwds = ['症状', '表征', '现象', '症候', '表现']
-        self.cause_qwds = ['会引起','来源','原因', '成因', '为什么', '怎么会', '怎样才', '咋样才',
+        self.cause_qwds = ['会引起', '来源', '原因', '成因', '为什么', '怎么会', '怎样才', '咋样才',
                            '怎样会', '如何会', '为啥', '为何', '如何才会', '怎么才会', '会导致', '会造成']
         self.acompany_qwds = ['并发症', '并发', '一起发生', '一并发生',
                               '一起出现', '一并出现', '一同发生', '一同出现', '伴随发生', '伴随', '共现']
@@ -63,11 +63,14 @@ class QuestionClassifier:
         self.cureprob_qwds = ['多大概率能治好', '多大几率能治好', '治好希望大么',
                               '几率', '几成', '比例', '可能性', '能治', '可治', '可以治', '可以医']
         self.easyget_qwds = ['易感人群', '容易感染',
-                             '易发人群', '什么人', '哪些人', '感染', '染上', '得上']
+                             '易发人群', '什么人', '哪些人', '染上', '得上']
+        self.people_qwds = ["孩子","老人","我","男","女"]
         self.check_qwds = ['检查', '检查项目', '查出', '检查', '测出', '试出']
-        self.belong_qwds = ['属于什么科', '属于', '什么科', '科室']
         self.cure_qwds = ['治疗什么', '治啥', '治疗啥', '医治啥', '治愈啥', '主治啥', '主治什么', '有什么用', '有何用', '用处', '用途',
                           '有什么好处', '有什么益处', '有何益处', '用来', '用来做啥', '用来作甚', '需要', '要']
+        self.trigger_wds = self.symptom_qwds + self.cause_qwds + self.acompany_qwds + self.food_qwds + self.drug_qwds + \
+            self.prevent_qwds+self.lasttime_qwds+self.cureway_qwds + \
+            self.cureprob_qwds+self.easyget_qwds + self.check_qwds + self.cure_qwds+ self.people_qwds
 
         print('model init finished ......')
 
@@ -77,10 +80,16 @@ class QuestionClassifier:
 
     def classify(self, question):
         data = {}
+        question_cleaned = question
+        for wd in self.trigger_wds:
+            if wd in question:
+                question_cleaned = question_cleaned.replace(wd,"")
+        print(question_cleaned) 
         entity_list = self.entity_extract_match(question)
+        print(entity_list)
         dialog_state = "Waiting"
         if not entity_list:
-            prob_entity, original_word = self.entity_extract_bert(question)
+            prob_entity, original_word = self.entity_extract_bert(question_cleaned)
             dialog_state = "SynonymQuestioning"
             return dialog_state, question.replace(original_word, prob_entity)
         data['entities'] = entity_list
@@ -89,15 +98,13 @@ class QuestionClassifier:
         for type_ in entity_list.values():
             types += type_
 
-        question_type=''
-        # todo :仅支持单一描述
+        question_type = ''
         # 症状
         if self.check_words(self.symptom_qwds, question) and ('disease' in types):
             question_type = 'disease_symptom'
 
         if ('symptom' in types):
             question_type = 'symptom_disease'
-
 
         # 来源
         if self.check_words(self.cause_qwds, question) and ('disease' in types):
@@ -136,24 +143,24 @@ class QuestionClassifier:
 
     '''问句过滤'''
 
-    def entity_extract_bert(self, question):
-        n_grams = [2,3,4]
-        for n in n_grams:
-            term = []
-            max_score = 0
-            for i in range(len(question)):
-                term.append(question[i:i+n])
-            for word in term:
-                wd_vec = bc.encode([word])[0]
-                for wd, vec in self.symptom_vec.items():
-                    score = np.inner(wd_vec, vec) / \
-                        (np.linalg.norm(wd_vec)*np.linalg.norm(vec))
-                    if score > max_score:
+    # def entity_extract_bert(self, question):
+    #     n_grams = [2, 3, 4]
+    #     for n in n_grams:
+    #         term = []
+    #         max_score = 0
+    #         for i in range(len(question)):
+    #             term.append(question[i:i+n])
+    #         for word in term:
+    #             wd_vec = bc.encode([word])[0]
+    #             for wd, vec in self.symptom_vec.items():
+    #                 score = np.inner(wd_vec, vec) / \
+    #                     (np.linalg.norm(wd_vec)*np.linalg.norm(vec))
+    #                 if score > max_score:
 
-                        max_score = score
-                        prob_entity = wd
-                        original_word = word
-        return prob_entity, original_word
+    #                     max_score = score
+    #                     prob_entity = wd
+    #                     original_word = word
+    #     return prob_entity, original_word
 
     def entity_extract_match(self, question):
         region_wds = []

@@ -1,5 +1,6 @@
 from py2neo import Graph
-import random
+from collections import Counter
+
 from . import *
 #from question_parser import QuestionPaser
 
@@ -12,9 +13,9 @@ class DecisionTree:
         self.g = Graph("http://localhost:7474", auth=("neo4j", "ohahaha"))
         self.parser = QuestionPaser()
         self.root_symptom = root_symptom
-        self.num_limit = 8
+        self.num_limit = 5
         self.tree_dict = {}
-        self.desc = list(desc.items())[0][1]
+        self.desc = desc
         self.last_question = {'question_dim': '', 'candidates': []}
 
     def build(self):
@@ -33,41 +34,52 @@ class DecisionTree:
 
     def ask(self):
         links = {i: [] for i in self.desc}
-        question_dim = list(self.tree_dict.keys())[0]
-        ask_dict = self.tree_dict[question_dim]
-        if not self.last_question['candidates']:
-            candidates = []
+        if self.tree_dict:
+            
+            question_dim = list(self.tree_dict.keys())[0]
+            ask_dict = self.tree_dict[question_dim]
+            if not self.last_question['candidates']:
+                candidates = []
+                for d in self.desc:
+                    candidates += ask_dict[d]
+                candi_counter= Counter(candidates)
+                candidates = list(set(candidates))
+                for r_s in self.root_symptom:
+                    if r_s in candidates:
+                        candidates.remove(r_s)
+                def sort_by_count(i):
+                    return candi_counter[i]
+                candidates.sort(key=sort_by_count,reverse=True)
+            else:
+                candidates = self.last_question['candidates']
+
+            candi_to_ask = candidates[:self.num_limit]
+            candidates = candidates[self.num_limit:] if len(
+                candidates) > self.num_limit else []
             for d in self.desc:
-                candidates += ask_dict[d]
-            candidates = list(set(candidates))
-            if self.root_symptom in candidates:
-                candidates.remove(self.root_symptom)
+                for nature in ask_dict[d]:
+                    if nature != self.root_symptom and nature in candi_to_ask:
+                        links[d].append(nature)
+
+            self.last_question['question_dim'] = question_dim
+            self.last_question['candidates'] = candidates
+            self.last_question['candi_to_ask'] = candi_to_ask
+
+            answer = self.ask_wrapper(question_dim)
+            for i, wd in enumerate(candi_to_ask):
+                answer += (' '+str(i+1)+'.'+wd)
+            answer += " {}.其他".format(self.num_limit+1) if candidates else ""
+            question_info = {'answer': answer, 'nature_entities': candi_to_ask, 'nature_entity_type': tree_dims[question_dim],
+                            'q_type': question_dim, 'links': links}
+
+            return question_info
         else:
-            candidates = self.last_question['candidates']
-
-        candi_to_ask = candidates[:self.num_limit]
-        candidates = candidates[self.num_limit:] if len(
-            candidates) > self.num_limit else []
-        for d in self.desc:
-            for nature in ask_dict[d]:
-                if nature != self.root_symptom and nature in candi_to_ask:
-                    links[d].append(nature)
-
-        self.last_question['question_dim'] = question_dim
-        self.last_question['candidates'] = candidates
-        self.last_question['candi_to_ask'] = candi_to_ask
-
-        answer = self.ask_wrapper(question_dim)
-        for i, wd in enumerate(candi_to_ask):
-            answer += (str(i+1)+'.'+wd)
-        answer += "{}.其他".format(self.num_limit+1) if candidates else ""
-        question_info = {'answer': answer, 'nature_entities': candi_to_ask, 'nature_entity_type': tree_dims[question_dim],
-                         'q_type': question_dim, 'links': links}
-
-        return question_info
+            question_info = {'nature_entities': [],'links': links}
+            
+            return question_info
 
     def ask_wrapper(self, q_type):
-        answer = "请回复数字\n"
+        answer = "请回复数字或点击图谱中的节点\n"
         if q_type == "result_from":
             answer += "最近是否吃了以下食物？\n"
 
@@ -81,12 +93,12 @@ class DecisionTree:
 
     def update(self, result):
 
-        if result == self.num_limit+1:
+        if result == self.num_limit+1 or result == "其他":
             del_list = self.last_question['candi_to_ask']
             return del_list
         else:
-
-            candi = self.last_question['candi_to_ask'][result-1]
+          
+            candi = result
             question_dim = self.last_question['question_dim']
             self.last_question = {'question_dim': '', 'candidates': []}
             q_dict = self.tree_dict[question_dim]
@@ -133,3 +145,7 @@ class DecisionTree:
 
     def reply_wrapper(self, desc: list):
         return "您好，您的情况可能是"+'或'.join(desc)+"感染导致的，请参阅本系统中"+'和'.join(desc)+"相关知识。"
+
+
+
+        

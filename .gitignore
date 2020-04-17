@@ -6,7 +6,7 @@ Tencent_AILab_ChineseEmbedding/
 *.pyc
 backend/static/
 backend/templates/
-
+flask_learn/
 # dependencies
 frontend/node_modules
 frontend/package-lock.json

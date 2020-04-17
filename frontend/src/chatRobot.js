@@ -15,6 +15,7 @@ class ChatWindow extends Component {
         };
     }
 
+    
     _onMessageWasSent = (message) => {
         this.setState({
             messageList: [...this.state.messageList, message]
@@ -49,8 +50,11 @@ class ChatWindow extends Component {
     };
 
     render() {
+        const switchNode = this.props.switchNode
         const {messageList, isOpen} = this.state;
+
         return (<div>
+            <p> {switchNode}</p>
             <Launcher
                 agentProfile={{
                     teamName: '智能问诊机器人',
@@ -68,18 +72,34 @@ class ChatWindow extends Component {
 
 export class ChatRobot extends Component {
     state = {
-        data: null
+        data: null,
+        node: null
     };
     setGraphData = data => this.setState({data});
+
+    onNodeClick(node) {
+        console.log(node)
+        this.setState({node})
+        this.ChatWindow._onMessageWasSent({
+            author: 'me',
+            type: 'text',
+            data: {'text':node}
+        })
+    }
 
     render() {
         return (
             <Row type='flex' justify="start">
                 <Col span={12}>
-                    <ChatWindow setGraphData={this.setGraphData.bind(this)}/>
+                    <ChatWindow
+                     setGraphData={this.setGraphData.bind(this)}
+                     switchNode ={this.state.node}
+                     ref={(ChatWindow) => { this.ChatWindow = ChatWindow; }}  />
                 </Col>
                 <Col span={12}>
-                    <ForceGraph data={this.state.data}/>
+                    <ForceGraph data={this.state.data} getNodeName={(node) => {
+                    this.onNodeClick(node)
+                }}/>
                 </Col>
             </Row>
         )
