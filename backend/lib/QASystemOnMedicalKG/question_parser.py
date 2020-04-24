@@ -11,7 +11,6 @@ class QuestionPaser:
                     entity_dict[type] = [arg]
                 else:
                     entity_dict[type].append(arg)
-        print(entity_dict)
         return entity_dict
 
     '''解析主函数'''

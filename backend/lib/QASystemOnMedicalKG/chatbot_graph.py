@@ -27,7 +27,8 @@ class RobotRespond:
         self.last_question = ""
         self.response = {'answer': '', 'result': '',
                          'graph': {'nodes': [],  'links': [],'last_question_candi':[]}}
-        self.false_response = {'answer': '我没能理解你的问题'}
+        self.false_response = {'answer': '我没能理解你的问题', 'result': '',
+                         'graph': {'nodes': [],  'links': [],'last_question_candi':[]}}
         self.origin_q_type = ''
         self.origin_entity = ''
 
@@ -40,7 +41,7 @@ class RobotRespond:
             # sent  --> int or list
 
             if str.isdigit(sent) and int(sent)< self.decision_tree.num_limit+2:
-                msg = int(sent)
+                msg = self.response['last_question_candi'][int(sent)]
             elif  sent in  self.response['last_question_candi']:
                 msg = sent
             else:
@@ -49,15 +50,16 @@ class RobotRespond:
                 return temp_response
 
             self.dialog_state, del_entity_list, question_info = self.decision_tree.reply(
-                    sent)
+                    msg)
 
-        
+            print(self.dialog_state, del_entity_list, question_info)
                 # 更新response_graph
                 # 增加新节点及链接
             for link in self.response['graph']['links']:
                 link['new'] = False
             for node in self.response['graph']['nodes']:
                 node['new'] = False
+                node['candidate'] = False
             self.add_graph_entity(question_info)
             # 删除排除节点及链接
 
@@ -71,21 +73,22 @@ class RobotRespond:
                 return temp_response
 
             else:
+                print(self.response)
                 temp_response = copy.deepcopy(self.response)
-                # temp = []
-                # for link in temp_response['graph']['links']:
-                #     temp.append(link['source'])
-                #     temp.append(link['target'])
-                # temp =Counter(temp)
-                # print(temp)
-                # for k,v in temp.items():
-                #     if v ==1:
-                #         for n in temp_response['graph']['nodes']:
-                #             if n['id']==k and n['group']=='disease':
-                #                 temp_response['graph']['nodes'].remove(n)
-                #         for link in temp_response['graph']['links']:   
-                #             if (link['source']==k) or (link['target']==k):
-                #                 temp_response['graph']['links'].remove(link)
+                temp = []
+                for link in temp_response['graph']['links']:
+                    temp.append(link['source'])
+                    #temp.append(link['target'])
+                temp =Counter(temp)
+                print(temp)
+                for k,v in temp.items():
+                    if v ==1:
+                        for n in temp_response['graph']['nodes']:
+                            if n['id']==k and n['group']=='disease':
+                                temp_response['graph']['nodes'].remove(n)
+                        for link in temp_response['graph']['links']:   
+                            if (link['source']==k) or (link['target']==k):
+                                temp_response['graph']['links'].remove(link)
                 return  temp_response 
 
 
@@ -123,18 +126,18 @@ class RobotRespond:
         # 查询构造
         res_sql = self.parser.parser_main(res_classify)
         print("res_sql:"+str(res_sql))
-        self.dialog_state, final_answers,answer_entity_type, links = self.searcher.search_main(
+        self.dialog_state, result,final_answers,answer_entity_type, links = self.searcher.search_main(
             res_sql)
         # 构建response
         answer_entities = list(links.keys())
         self.origin_entity = list(links.values())[0]
         for node in self.origin_entity:
             self.response['graph']['nodes'].append(
-                {'id': node, 'group': "origin", 'new': False})
+                {'id': node, 'group': "origin", 'new': False,'candidate':False})
 
         for answer_entity in answer_entities:
             self.response['graph']['nodes'].append(
-                {'id': answer_entity, 'group': answer_entity_type})
+                {'id': answer_entity, 'group': answer_entity_type,'candidate':False})
         for answer_entity, answer_entity_natures in links.items():
             for a_e_nature in answer_entity_natures:
                 if self.origin_q_type in q_type_father_children:
@@ -149,8 +152,8 @@ class RobotRespond:
                 self.system_reset()
                 return self.false_response
             else:
-
                 self.response['answer'] = final_answers
+                self.response['result'] = result
                 temp_response = self.response
                 self.system_reset()
                 return temp_response
@@ -181,11 +184,10 @@ class RobotRespond:
         # 未找到答案或答案唯一 退出
         elif self.dialog_state == "Waiting":
             self.system_reset()
-
             if not final_answers:
                 return self.false_response
-            else:
-                return '\n'.join(final_answers)
+            # else:
+            #     return '\n'.join(final_answers)
 
             return self.response
 
@@ -205,11 +207,12 @@ class RobotRespond:
         self.response['answer'] = question_info['answer']
         for nature_entity in question_info['nature_entities']:
             self.response['graph']['nodes'].append(
-                {'id': nature_entity, 'group': question_info['nature_entity_type'], 'new': True})
+                {'id': nature_entity, 'group': question_info['nature_entity_type'], 'new': True,'candidate':2})
         for answer_entity, answer_entity_natures in question_info['links'].items():
             for a_e_nature in answer_entity_natures:
                 self.response['graph']['links'].append(
                     {'source': answer_entity, 'target': a_e_nature, 'relation': q_type_show[question_info['q_type']], 'new': True})
+        
 
     def del_graph_entity(self, del_entity_list):
 

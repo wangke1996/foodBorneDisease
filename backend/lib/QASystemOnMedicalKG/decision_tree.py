@@ -30,7 +30,7 @@ class DecisionTree:
                 for answer in result:
                     self.tree_dict[question_dim][answer['m.name']].append(
                         answer['n.name'])
-        print(self.tree_dict)
+
 
     def ask(self):
         links = {i: [] for i in self.desc}
@@ -96,28 +96,35 @@ class DecisionTree:
         if result == self.num_limit+1 or result == "其他":
             del_list = self.last_question['candi_to_ask']
             return del_list
-        else:
-          
+        else:          
             candi = result
             question_dim = self.last_question['question_dim']
+            print(question_dim)
             self.last_question = {'question_dim': '', 'candidates': []}
             q_dict = self.tree_dict[question_dim]
+            print(self.tree_dict)
+            print(q_dict)
             del_list = []
+            print(candi)
             # 对于当前question_dim 未命中且属性不为空的删除
             for disease in self.desc:
                 if (q_dict[disease]) and (candi not in q_dict[disease]):
                     del_list.append(disease)
+                print(disease, q_dict[disease])
+   
             for del_disease in del_list:
                 self.desc.remove(del_disease)
-            print(self.desc)
+
             del self.tree_dict[question_dim]
             return del_list
 
     def reply(self, result):
+        
         del_list = self.update(result)
+        
         # 默认：继续提问
         next_state = "Questioning"
-
+        
         # 结束条件1 剩唯一答案
         if len(self.desc) == 1:
             next_state = "Waiting"
@@ -125,17 +132,18 @@ class DecisionTree:
             question_info = {'answer': answer, 'nature_entities': [], 'nature_entity_type': '',
                              'q_type': '', 'links': {}, 'result': self.desc}
             return next_state, del_list, question_info
+        print(self.desc)
         # 结束条件2 无候选答案
         if len(self.desc) == 0:
             next_state = "Waiting"
             answer = "未能找到答案"
             question_info = {'answer': answer, 'nature_entities': [], 'nature_entity_type': '',
-                             'q_type': '', 'links': {}}
+                             'q_type': '', 'links': {},'result': self.desc}
             return next_state, del_list, question_info
-
+        print(self.desc)
         question_info = self.ask()
         # 结束条件3 有候选答案，但无法生成决策树：返回所有可能答案
-
+        print(self.desc,question_info['nature_entities'])
         if not question_info['nature_entities']:
             next_state = "Waiting"
             answer = self.reply_wrapper(self.desc)

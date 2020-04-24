@@ -14,8 +14,10 @@
     "react-chat-window": "^1.2.1",
     "react-dom": "^16.12.0",
     "react-force-graph": "^1.31.1",
+    "react-icons": "^2.2.7",
     "react-scripts": "3.3.0",
     "reqwest": "^2.0.5",
+    "three": "^0.115.0",
     "three-spritetext": "^1.2.2"
   },
   "scripts": {
@@ -38,5 +40,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "react-router-dom": "^5.1.2"
   }
 }

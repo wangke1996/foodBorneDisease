@@ -57,13 +57,14 @@ class AnswerSearcher:
 
             answer_entity_type = type_table[question_type]
 
-            final_answer = self.answer_prettify(question_type, answers)
+            answer_entity,final_answer = self.answer_prettify(question_type, answers)
             if final_answer:
                 final_answers.append(final_answer)
             links = {}
             for candi_answer in candi_answers:
                 links[candi_answer] = origin_entity
-        return dialog_state, final_answers,answer_entity_type,links
+
+        return dialog_state, answer_entity,final_answers,answer_entity_type,links
 
     # def get_desc(self, question_type,answers):
     #     if question_type == 'disease_symptom':
@@ -87,27 +88,31 @@ class AnswerSearcher:
 
         final_answer = []
         if question_type == 'disease_symptom':
+            answer_entity = [i['n.name'] for i in answers]
             subject = answers[0]['m.name']
             final_answer = '{0}的症状包括：{1}'.format(subject, '、'.join(
                 [i['n.name'] for i in answers][:self.num_limit]))
 
         elif question_type == 'symptom_disease':
             subject = answers[0]['n.name']
+            answer_entity = [i['m.name'] for i in answers]
             final_answer = '症状{0}可能的原因是有：{1}'.format(subject, '、'.join(
                 [i['m.name'] for i in answers][:self.num_limit]))
 
         elif question_type == 'result_from':
+            answer_entity = [i['n.name'] for i in answers]
             subject = answers[0]['m.name']
             final_answer = '可能引起{0}的食物有：{1}'.format(subject, '、'.join(
                 [i['n.name'] for i in answers][:self.num_limit]))
 
         elif question_type == 'disease_easyget':
+            answer_entity = [i['n.name'] for i in answers]
             subject = answers[0]['m.name']
 
             final_answer = '{0}的易感人群有：{1}'.format(subject, '、'.join(
                 [i['n.name'] for i in answers][:self.num_limit]))
 
-        return final_answer
+        return answer_entity,final_answer
 
 
 if __name__ == '__main__':

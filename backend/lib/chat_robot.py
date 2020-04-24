@@ -83,7 +83,6 @@ class ChatRobot(object):
     def make_response_with_graph(self, message_list):
         global responses
         #response = responses.__next__()
-        print(message_list)
         response  = self.handler.system_main(message_list[-1]['data']['text'])
         print(response)
         return response 

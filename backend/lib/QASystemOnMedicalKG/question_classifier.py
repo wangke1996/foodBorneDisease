@@ -4,15 +4,15 @@ import json
 import numpy as np
 # 设置默认文件编码utf8
 import _locale
-# from bert_serving.client import BertClient
-# from pyltp import Segmentor
+from bert_serving.client import BertClient
+from pyltp import Segmentor
 
-# LTP_DATA_DIR = 'ltp_data_v3.4.0'
-# cws_model_path = os.path.join(LTP_DATA_DIR, 'cws.model')
-# segmentor = Segmentor()
-# segmentor.load(cws_model_path)
+LTP_DATA_DIR = 'ltp_data_v3.4.0'
+cws_model_path = os.path.join(LTP_DATA_DIR, 'cws.model')
+segmentor = Segmentor()
+segmentor.load(cws_model_path)
 
-# bc = BertClient()
+bc = BertClient()
 
 _locale._getdefaultlocale = (lambda *args: ['en_US', 'utf8'])
 
@@ -84,9 +84,8 @@ class QuestionClassifier:
         for wd in self.trigger_wds:
             if wd in question:
                 question_cleaned = question_cleaned.replace(wd,"")
-        print(question_cleaned) 
         entity_list = self.entity_extract_match(question)
-        print(entity_list)
+
         dialog_state = "Waiting"
         if not entity_list:
             prob_entity, original_word = self.entity_extract_bert(question_cleaned)
@@ -143,24 +142,24 @@ class QuestionClassifier:
 
     '''问句过滤'''
 
-    # def entity_extract_bert(self, question):
-    #     n_grams = [2, 3, 4]
-    #     for n in n_grams:
-    #         term = []
-    #         max_score = 0
-    #         for i in range(len(question)):
-    #             term.append(question[i:i+n])
-    #         for word in term:
-    #             wd_vec = bc.encode([word])[0]
-    #             for wd, vec in self.symptom_vec.items():
-    #                 score = np.inner(wd_vec, vec) / \
-    #                     (np.linalg.norm(wd_vec)*np.linalg.norm(vec))
-    #                 if score > max_score:
+    def entity_extract_bert(self, question):
+        n_grams = [2, 3, 4]
+        for n in n_grams:
+            term = []
+            max_score = 0
+            for i in range(len(question)):
+                term.append(question[i:i+n])
+            for word in term:
+                wd_vec = bc.encode([word])[0]
+                for wd, vec in self.symptom_vec.items():
+                    score = np.inner(wd_vec, vec) / \
+                        (np.linalg.norm(wd_vec)*np.linalg.norm(vec))
+                    if score > max_score:
 
-    #                     max_score = score
-    #                     prob_entity = wd
-    #                     original_word = word
-    #     return prob_entity, original_word
+                        max_score = score
+                        prob_entity = wd
+                        original_word = word
+        return prob_entity, original_word
 
     def entity_extract_match(self, question):
         region_wds = []

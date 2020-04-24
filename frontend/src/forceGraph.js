@@ -1,7 +1,6 @@
 import React, {Component, useCallback} from 'react';
 import {ForceGraph3D} from 'react-force-graph';
 import SpriteText from 'three-spritetext';
-import {ChatRobot} from './chatRobot'
 function addOpacityToHexColor(color, opacity = 0.5, mode = '#rrggbbaa') {
     const opacityHex = Math.round(opacity * 255).toString(16);
     if (mode === "#rrggbbaa")
@@ -65,6 +64,7 @@ export class ForceGraph extends Component {
                 height={window.innerHeight}
                 nodeAutoColorBy="group"
                 //nodeColor = {color_dict["group"]}
+              //  nodeOpacity ={0}
                 nodeThreeObject={node => {
                     const sprite = new SpriteText(node.id);
                     sprite.color = node.new ? addOpacityToHexColor(node.color, 0.5) : node.color;
@@ -72,12 +72,27 @@ export class ForceGraph extends Component {
                     sprite.fontWeight = node.new ? 'bold' : 'normal';
                     return sprite;
                 }}
+                // nodeThreeObject={({ candidate }) => new THREE.Mesh(
+                //     [
+                //       new THREE.BoxGeometry(Math.random() * 20, Math.random() * 20, Math.random() * 20),
+                //       new THREE.ConeGeometry(Math.random() * 10, Math.random() * 20),
+                //       new THREE.CylinderGeometry(Math.random() * 10, Math.random() * 10, Math.random() * 20),
+                //       new THREE.DodecahedronGeometry(Math.random() * 10),
+                //       new THREE.SphereGeometry(Math.random() * 10),
+                //       new THREE.TorusGeometry(Math.random() * 10, Math.random() * 2),
+                //       new THREE.TorusKnotGeometry(Math.random() * 10, Math.random() * 2)
+                //     ][candidate],
+                //     new THREE.MeshLambertMaterial({
+                //       color: Math.round(Math.random() * Math.pow(2, 24)),
+                //       transparent: true,
+                //       opacity: 0.75}))}
                 linkAutoColorBy='relation'
                 linkThreeObjectExtend={true}
                 linkThreeObject={link => {
                     // extend link with text sprite
-                    const sprite = new SpriteText(link.index?link.index:"1");
-                    sprite.color = link.new ? addOpacityToHexColor(link.color, 0.7) : link.color;
+                    //const sprite = new SpriteText(link.relation);
+                    const sprite = new SpriteText()
+                    sprite.color = link.new ? link.color:addOpacityToHexColor(link.color, 0.7);
                     sprite.textHeight = link.index ? 0 : 3;
                     sprite.fontWeight = link.new ? 'normal' : 'bold';
                     return sprite;
