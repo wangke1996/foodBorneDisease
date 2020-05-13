@@ -113,8 +113,8 @@ export class ForceGraph extends Component {
     
                 backgroundColor={'rgba(255,255,255,0)'}
                 // enableNodeDrag={false}
-                onNodeClick={(node) => {
-                    this.handleClick(node.id)}}
+                onNodeClick={(node,e) => {
+                    this.handleClick(node.id);e.preventDefault();}}
             />
 
         )

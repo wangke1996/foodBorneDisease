@@ -2,19 +2,24 @@ import os
 import ahocorasick
 import json
 import numpy as np
+import re
 # 设置默认文件编码utf8
 import _locale
 from bert_serving.client import BertClient
-from pyltp import Segmentor
-
-LTP_DATA_DIR = 'ltp_data_v3.4.0'
-cws_model_path = os.path.join(LTP_DATA_DIR, 'cws.model')
-segmentor = Segmentor()
-segmentor.load(cws_model_path)
+#import synonyms
+import Levenshtein
+# LTP_DATA_DIR = 'ltp_data_v3.4.0'
+# cws_model_path = os.path.join(LTP_DATA_DIR, 'cws.model')
+# segmentor = Segmentor()
+# segmentor.load(cws_model_path)
 
 bc = BertClient()
 
 _locale._getdefaultlocale = (lambda *args: ['en_US', 'utf8'])
+
+
+def takeSecond(elem):
+    return elem[1]
 
 
 class QuestionClassifier:
@@ -25,6 +30,7 @@ class QuestionClassifier:
         self.food_path = os.path.join(cur_dir, 'dict/food.json')
         self.symptom_path = os.path.join(cur_dir, 'dict/symptom.json')
         self.deny_path = os.path.join(cur_dir, 'dict/deny.txt')
+        self.stop_path = os.path.join(cur_dir, 'dict/hit_stopwords.txt')
         # 加载特征词
         self.disease_vec = json.load(open(self.disease_path))
         self.disease_wds = list(self.disease_vec.keys())
@@ -38,39 +44,25 @@ class QuestionClassifier:
             self.disease_wds+self.food_wds+self.symptom_wds)
         self.deny_words = [i.strip()
                            for i in open(self.deny_path) if i.strip()]
+        self.stop_words = [i.strip()
+                           for i in open(self.stop_path) if i.strip()]
         # 构造领域actree
         self.region_tree = self.build_actree(list(self.region_words))
         # 构建词典
         self.wdtype_dict = self.build_wdtype_dict()
         # 问句疑问词
-        self.symptom_qwds = ['症状', '表征', '现象', '症候', '表现']
+        self.symptom_qwds = ['症状', '表征', '现象', '症候', '表现', "怎么办"]
         self.cause_qwds = ['会引起', '来源', '原因', '成因', '为什么', '怎么会', '怎样才', '咋样才',
                            '怎样会', '如何会', '为啥', '为何', '如何才会', '怎么才会', '会导致', '会造成']
         self.acompany_qwds = ['并发症', '并发', '一起发生', '一并发生',
                               '一起出现', '一并出现', '一同发生', '一同出现', '伴随发生', '伴随', '共现']
-        self.food_qwds = ['饮食', '饮用', '吃', '食', '伙食', '膳食', '喝',
-                          '菜', '忌口', '补品', '保健品', '食谱', '菜谱', '食用', '食物', '补品']
-        self.drug_qwds = ['药', '药品', '用药', '胶囊', '口服液', '炎片']
-        self.prevent_qwds = ['预防', '防范', '抵制', '抵御', '防止', '躲避', '逃避', '避开', '免得', '逃开', '避开', '避掉', '躲开', '躲掉', '绕开',
-                             '怎样才能不', '怎么才能不', '咋样才能不', '咋才能不', '如何才能不',
-                             '怎样才不', '怎么才不', '咋样才不', '咋才不', '如何才不',
-                             '怎样才可以不', '怎么才可以不', '咋样才可以不', '咋才可以不', '如何可以不',
-                             '怎样才可不', '怎么才可不', '咋样才可不', '咋才可不', '如何可不']
         self.lasttime_qwds = ['周期', '多久', '多长时间', '多少时间',
                               '几天', '几年', '多少天', '多少小时', '几个小时', '多少年']
-        self.cureway_qwds = ['怎么治疗', '如何医治', '怎么医治', '怎么治',
-                             '怎么医', '如何治', '医治方式', '疗法', '咋治', '怎么办', '咋办', '咋治']
-        self.cureprob_qwds = ['多大概率能治好', '多大几率能治好', '治好希望大么',
-                              '几率', '几成', '比例', '可能性', '能治', '可治', '可以治', '可以医']
         self.easyget_qwds = ['易感人群', '容易感染',
                              '易发人群', '什么人', '哪些人', '染上', '得上']
-        self.people_qwds = ["孩子","老人","我","男","女"]
-        self.check_qwds = ['检查', '检查项目', '查出', '检查', '测出', '试出']
-        self.cure_qwds = ['治疗什么', '治啥', '治疗啥', '医治啥', '治愈啥', '主治啥', '主治什么', '有什么用', '有何用', '用处', '用途',
-                          '有什么好处', '有什么益处', '有何益处', '用来', '用来做啥', '用来作甚', '需要', '要']
-        self.trigger_wds = self.symptom_qwds + self.cause_qwds + self.acompany_qwds + self.food_qwds + self.drug_qwds + \
-            self.prevent_qwds+self.lasttime_qwds+self.cureway_qwds + \
-            self.cureprob_qwds+self.easyget_qwds + self.check_qwds + self.cure_qwds+ self.people_qwds
+        self.people_qwds = ["孩子", "老人", "我", "男", "女"]
+        self.trigger_wds = self.symptom_qwds + self.cause_qwds + self.acompany_qwds + \
+            self.lasttime_qwds+self.easyget_qwds + self.people_qwds
 
         print('model init finished ......')
 
@@ -80,17 +72,40 @@ class QuestionClassifier:
 
     def classify(self, question):
         data = {}
-        question_cleaned = question
-        for wd in self.trigger_wds:
-            if wd in question:
-                question_cleaned = question_cleaned.replace(wd,"")
+        question_cleaned = self.clean(question)
+        print(question_cleaned)
         entity_list = self.entity_extract_match(question)
-
         dialog_state = "Waiting"
+        if len(question_cleaned )<2:
+            return dialog_state,{'entities':[],'question_types':""}
+
+
+        # 未命中时 同义词搜索
         if not entity_list:
-            prob_entity, original_word = self.entity_extract_bert(question_cleaned)
             dialog_state = "SynonymQuestioning"
-            return dialog_state, question.replace(original_word, prob_entity)
+            Top3Scores_Bert = self.synonym_search(question_cleaned, "Bert")
+            Top3Scores_L = self.synonym_search(question_cleaned, "Levenshtein")
+            #Top3Scores_W = self.synonym_search(question_cleaned, "Word2Vec")
+            TopScores =  Top3Scores_L+Top3Scores_Bert
+            self.TopScores = TopScores
+            # 去重
+            existing_wd = []
+            for score in TopScores:
+                if score[2] in existing_wd:
+                    self.TopScores.remove(score)
+                existing_wd.append(score[2])
+            print(self.TopScores)
+            self.origin_question = question_cleaned
+            answer = "你想问的是不是"
+            candi_synonym = []
+            for i, score in enumerate(self.TopScores):
+                answer += (' '+str(i+1)+'.'+score[2])
+                candi_synonym.append(score[2])
+            answer+= (' '+str(i+2)+'.都不是')
+            SynonymQuestioning_info = {
+                "answer": answer, "candi_synonym": candi_synonym}
+            return dialog_state, SynonymQuestioning_info
+
         data['entities'] = entity_list
         # 收集问句当中所涉及到的实体类型
         types = []
@@ -118,6 +133,14 @@ class QuestionClassifier:
         return dialog_state, data
 
     '''构造词对应的类型'''
+    def clean(self,sent):
+        
+        sent = re.sub(r"[0-9\s+\.\!\/_,$%^*()?;；:-【】+\"\']+|[+——！，;:。？、~@#￥%……&*（）]+", "", sent)
+        for wd in self.stop_words:
+            if wd in sent:
+                sent = sent.replace(wd, "")
+        return sent
+
 
     def build_wdtype_dict(self):
         wd_dict = dict()
@@ -142,24 +165,40 @@ class QuestionClassifier:
 
     '''问句过滤'''
 
-    def entity_extract_bert(self, question):
+    def synonym_search(self, question, method):
         n_grams = [2, 3, 4]
+        term = []
+        scores = []
         for n in n_grams:
-            term = []
+            for i in range(len(question)-n+1):
+                word = question[i:i+n]
+                if method == 'Bert':
+                    wd_vec = bc.encode([word])[0]
+                else:
+                    wd_vec = 0
+                term.append((word, wd_vec))
+        for word, wd_vec in term:
             max_score = 0
-            for i in range(len(question)):
-                term.append(question[i:i+n])
-            for word in term:
-                wd_vec = bc.encode([word])[0]
-                for wd, vec in self.symptom_vec.items():
+            for wd, vec in self.symptom_vec.items():
+                
+                if method == 'Bert':
                     score = np.inner(wd_vec, vec) / \
                         (np.linalg.norm(wd_vec)*np.linalg.norm(vec))
-                    if score > max_score:
-
-                        max_score = score
-                        prob_entity = wd
-                        original_word = word
-        return prob_entity, original_word
+                if method == "Levenshtein":
+                    score = Levenshtein.jaro(word, wd)
+                if method == "Word2Vec":
+                    score = synonyms.compare(word, wd)
+                if score >= max_score:
+                    max_score = score
+                    prob_entity = wd
+                    original_word = word
+            scores.append((original_word, max_score, prob_entity))
+        scores.sort(key=takeSecond, reverse=True)
+        # prob_entity = scores[0][2]
+        # original_word =scores[0][0]
+        print(method)
+        print(scores)
+        return scores[:3]
 
     def entity_extract_match(self, question):
         region_wds = []

@@ -1,5 +1,5 @@
 from .QASystemOnMedicalKG.chatbot_graph import RobotRespond
-
+import time
 response_with_graph_example = [
     # 假设首句抽取的症状是“肌肉疼痛”，下一级决策中，需要知道吃过猪肉（可能是弓形虫、旋毛虫）还是海鲜（空肠弯曲菌），
     # 则第一次返回的graph包含如下内容
@@ -86,6 +86,10 @@ class ChatRobot(object):
         response  = self.handler.system_main(message_list[-1]['data']['text'])
         print(response)
         return response 
+
+    def reset_Robot(self):
+        self.handler.system_reset()
+        return ""
 
 
 ROBOT = ChatRobot()

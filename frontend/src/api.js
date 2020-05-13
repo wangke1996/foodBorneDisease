@@ -42,6 +42,10 @@ export function getAnswerAndGraph(messageList, callback) {
     postData('getAnswerAndGraph', messageList, callback);
 }
 
+export function resetRobot(callback) {
+    postData('resetRobot', "",callback);
+}
+
 export function getBugs(callback) {
     getData('getBugs', d => callback([d]));
 }

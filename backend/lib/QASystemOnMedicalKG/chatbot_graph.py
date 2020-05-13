@@ -40,10 +40,12 @@ class RobotRespond:
         elif self.dialog_state == "Questioning":
             # sent  --> int or list
 
-            if str.isdigit(sent) and int(sent)< self.decision_tree.num_limit+2:
-                msg = self.response['last_question_candi'][int(sent)]
+            if str.isdigit(sent) and int(sent)< self.decision_tree.num_limit+1:
+                msg = self.response['last_question_candi'][int(sent)-1]
             elif  sent in  self.response['last_question_candi']:
                 msg = sent
+            elif str.isdigit(sent) and int(sent) == len( self.response['last_question_candi'])+1:
+                msg  = "其他"
             else:
                 temp_response = copy.deepcopy(self.response)
                 temp_response['answer'] = '请正确输入\n'+temp_response['answer']
@@ -96,8 +98,11 @@ class RobotRespond:
         elif self.dialog_state == "SynonymQuestioning":
             # 将模糊实体替换后重新回答
             self.dialog_state == "Waiting"
-            if sent == "是":
-                return self.get_answer(re.sub("你想问的是不是:|(是/否)", "", self.response['answer']))
+            if str.isdigit(sent) and int(sent)<= len(self.classifier.TopScores):
+                ori_question = self.classifier.origin_question
+                ori_entity = self.classifier.TopScores[int(sent)-1][0]
+                true_entity = self.classifier.TopScores[int(sent)-1][2]
+                return self.get_answer(ori_question.replace(ori_entity,true_entity))
             else:
                 self.system_reset()
                 return self.false_response
@@ -109,7 +114,8 @@ class RobotRespond:
 
         #  问题分类 实体抽取中模糊表达
         if self.dialog_state == "SynonymQuestioning":
-            self.response['answer'] = "你想问的是不是:" + res_classify + "(是/否)"
+            self.response['answer'] = res_classify['answer']
+            self.response['candi_synonym'] = res_classify['candi_synonym']
             return self.response
 
        # 无分类结果
@@ -168,9 +174,10 @@ class RobotRespond:
             temp = []
             for link in temp_response['graph']['links']:
                 temp.append(link['source'])
-                temp.append(link['target'])
+               # temp.append(link['target'])
             temp =Counter(temp)
             print(temp)
+            print(self.response)
             for k,v in temp.items():
                 if v ==1:
                     for n in temp_response['graph']['nodes']:
@@ -244,4 +251,4 @@ if __name__ == '__main__':
     while 1:
         question = input('用户:')
         answer = handler.system_main(question)
-        print('小勇:', answer)
+        print(answer)

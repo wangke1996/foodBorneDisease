@@ -11,6 +11,12 @@ def search_food():
     return ROBOT.make_response(message_list)
 
 
+@main.route('/resetRobot',methods=['POST'])
+def reset_ROBOT():
+    return ROBOT.reset_Robot()
+    
+
+
 @main.route('/getAnswerAndGraph', methods=['GET', 'POST'])
 def make_chat_response():
     message_list = request.get_json()
