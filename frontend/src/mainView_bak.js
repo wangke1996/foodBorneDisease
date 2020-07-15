@@ -6,25 +6,50 @@ import { BugMenu } from "./bugDetail";
 import { ChatRobot } from "./chatRobot";
 const { Header, Content, Footer } = Layout;
 
+const LeftSider = withRouter(({history}) => {
+    return (
+        <Sider>
+            <Menu
+                mode="inline"
+                defaultSelectedKeys={['/1']}
+                selectedKeys={[history.location.pathname]}
+            >
+                <Menu.Item key="/1">
+                    <Link to='/'></Link>
+                    致病微生物
+                </Menu.Item>
+                <Menu.Item key="/2">
+                    <Link to="/2"/>
+                    智能问诊
+                </Menu.Item>
+                <Menu.Item key="/3">
+                    <Link to="/3"/>
+                    option3
+                </Menu.Item>
+            </Menu>
+        </Sider>
 
+    );
+} )
 
 const TopMenu = withRouter(({ history }) => {
+    handleclick = () => { console.log([history.location.pathname]); }
     return (
         <Menu
             theme="dark"
             mode="horizontal"
-            defaultSelectedKeys={['/']}
+            defaultSelectedKeys={['1']}
             selectedKeys={[history.location.pathname]}
             style={{ lineHeight: '64px' }}
         >
-                <Menu.Item key="/">
-                    <Link to='/'></Link>
-                    致病微生物
-                </Menu.Item>
-                <Menu.Item key="/QA">
-                    <Link to="/QA"/>
-                    智能问诊
-                </Menu.Item>
+            <Menu.Item key="1">
+                <Link to='/'></Link>
+                致病微生物
+            </Menu.Item>
+            <Menu.Item key="2">
+                <Link to='/QA'></Link>
+                智能问诊
+            </Menu.Item>
         </Menu>
 
     );

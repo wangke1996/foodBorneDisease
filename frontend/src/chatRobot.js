@@ -81,9 +81,12 @@ class ChatWindow extends Component {
                         // console.log(result)
                         getBugDetail(result[0], detail => {
                             console.log(detail);
+                            
                             this.setState({ detail });
+                            if(JSON.stringify(this.state.detail) != "{}"){
+                                this.ChildModal.showModal()}
                         });
-                        this.ChildModal.showModal()
+                       
                     }
                 }
             });

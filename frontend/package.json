@@ -16,7 +16,7 @@
     "react-dom": "^16.12.0",
     "react-force-graph": "^1.31.1",
     "react-icons": "^2.2.7",
-    "react-scripts": "3.3.0",
+    "react-scripts": "3.4.0",
     "reqwest": "^2.0.5",
     "three": "^0.115.0",
     "three-spritetext": "^1.2.2"

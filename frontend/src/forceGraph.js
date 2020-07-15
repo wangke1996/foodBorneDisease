@@ -68,7 +68,7 @@ export class ForceGraph extends Component {
                 nodeThreeObject={node => {
                     const sprite = new SpriteText(node.id);
                     sprite.color = node.new ? addOpacityToHexColor(node.color, 0.5) : node.color;
-                    sprite.textHeight = node.new ? 7 : 5;
+                    sprite.textHeight = node.new ? 10 : 7;
                     sprite.fontWeight = node.new ? 'bold' : 'normal';
                     return sprite;
                 }}
@@ -115,6 +115,7 @@ export class ForceGraph extends Component {
                 // enableNodeDrag={false}
                 onNodeClick={(node,e) => {
                     this.handleClick(node.id);e.preventDefault();}}
+            
             />
 
         )

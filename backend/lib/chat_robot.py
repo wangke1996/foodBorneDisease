@@ -1,4 +1,4 @@
-from .QASystemOnMedicalKG.chatbot_graph import RobotRespond
+from .ChatBot.chatbot_graph import RobotRespond
 import time
 response_with_graph_example = [
     # 假设首句抽取的症状是“肌肉疼痛”，下一级决策中，需要知道吃过猪肉（可能是弓形虫、旋毛虫）还是海鲜（空肠弯曲菌），
@@ -74,6 +74,8 @@ class ChatRobot(object):
     def __init__(self):
         self.handler = RobotRespond()
         pass
+        self.response_total_time = 0
+        self.response_count = 0
 
     def make_response(self, message_list):
         # answer = self.handler.system_main(message_list[-1]['data']['text'])
@@ -83,8 +85,12 @@ class ChatRobot(object):
     def make_response_with_graph(self, message_list):
         global responses
         #response = responses.__next__()
+        t1= time.time()
         response  = self.handler.system_main(message_list[-1]['data']['text'])
-        print(response)
+        self.response_count+=1
+        self.response_total_time+=(time.time()-t1)
+        print("average_time",self.response_total_time/self.response_count)
+        print("count",self.response_count)
         return response 
 
     def reset_Robot(self):
