@@ -18,7 +18,7 @@
     "react-icons": "^2.2.7",
     "react-scripts": "3.4.0",
     "reqwest": "^2.0.5",
-    "three": "^0.115.0",
+    "three": "^0.125.0",
     "three-spritetext": "^1.2.2"
   },
   "scripts": {
