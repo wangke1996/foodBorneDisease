@@ -14,7 +14,7 @@ Click==7.0
 colorama==0.4.3
 decorator==4.4.2
 Flask==1.1.1
-Flask-Cors==3.0.8
+Flask-Cors==3.0.9
 gast==0.2.2
 google-auth==1.11.2
 google-auth-oauthlib==0.4.1
