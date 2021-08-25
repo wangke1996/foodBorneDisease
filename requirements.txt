@@ -74,7 +74,7 @@ six==1.14.0
 synonyms==3.10.2
 tensorboard==1.15.0
 tensorflow-estimator==1.15.1
-tensorflow-gpu==1.15.0
+tensorflow-gpu==2.5.1
 termcolor==1.1.0
 tornado==6.0.4
 tqdm==4.42.1
