@@ -44,7 +44,7 @@ mccabe==0.6.1
 mlxtend==0.17.0
 neobolt==1.7.16
 neotime==1.7.4
-numpy==1.18.1
+numpy==1.22.0
 oauthlib==3.1.0
 opt-einsum==3.2.0
 pandas==1.0.1
